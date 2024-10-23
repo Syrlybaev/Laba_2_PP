@@ -1,20 +1,6 @@
 from tkinter import *
 import random
 
-# Создаем глобальные переменные
-# Ширина экрана
-WIDTH = 800
-
-# Высота экрана
-HEIGHT = 600 
-
-# Размер одного болка
-SEG_SIZE = 20
-
-# Переменная, отвечающая за состояние игры
-IN_GAME = True
-
-
 # Вспомогательная функция
 def create_block():
     """ Создаем еду для змейки """
@@ -49,7 +35,7 @@ class Score(object):
         self.score = 0
 
 # Функция для управления игровым процессом
-def main():
+def game_Play():
     """ Моделируем игровой процесс """
     global IN_GAME
     if IN_GAME:
@@ -76,7 +62,7 @@ def main():
                     IN_GAME = False
 
         # скорость змейки
-        root.after(100, main)
+        root.after(100, game_Play)
     # Не IN_GAME -> останавливаем игру и выводим сообщения
     else:
         set_state(restart_text, 'normal')
@@ -158,7 +144,7 @@ def start_game():
 
     # Реагируем на нажатие клавиш
     c.bind("<KeyPress>", s.change_direction)
-    main()
+    game_Play()
 
 
 # Создаем сегменты и змейку
@@ -172,44 +158,68 @@ def create_snake():
 def close_win(root):
     exit()
 
-# Настройка главного окна
-root = Tk()
-root.title("Змейка")
 
-# Создаем экземпляр класса Canvas
-c = Canvas(root, width=WIDTH, height=HEIGHT, bg="#000000")
-c.grid()
+#cкорость змейки, размеры. 
+def main():
+    global WIDTH, HEIGHT, SEG_SIZE, IN_GAME, c, root, score, restart_text, game_over_text, close_but
 
-# Захватываем фокус для отлавливания нажатий клавиш
-c.focus_set()
 
-# Текст результата игры
-game_over_text = c.create_text(WIDTH / 2, HEIGHT / 2, text="Ты проиграл!",
-                               font='Arial 20', fill='red',
-                               state='hidden')
-                               
-# Текст начала новой игры после проигрыша
-restart_text = c.create_text(WIDTH / 2, HEIGHT - HEIGHT / 3,
-                             font='Arial 25',
-                             fill='green',
-                             text="Начать новую игру",
-                             state='hidden')
+    # Создаем глобальные переменные
+    # Ширина экрана
+    WIDTH = 800
 
-# Текст выхода из программы после проигрыша
-close_but = c.create_text(WIDTH / 2, HEIGHT - HEIGHT / 5, font='Arial 25',
-                          fill='green',
-                          text="Выход из игры",
-                          state='hidden')
+    # Высота экрана
+    HEIGHT = 600 
 
-# Отработка событий при нажимания кнопок
-c.tag_bind(restart_text, "<Button-1>", clicked)
-c.tag_bind(close_but, "<Button-1>", close_win)
+    # Размер одного болка
+    SEG_SIZE = 20
 
-# Считаем очки
-score = Score()
+    # Переменная, отвечающая за состояние игры
+    IN_GAME = True
+    
+    
+    # Настройка главного окна
+    root = Tk()
+    root.title("Змейка")
 
-# Запускаем игру
-start_game()
+    # Создаем экземпляр класса Canvas
+    c = Canvas(root, width=WIDTH, height=HEIGHT, bg="#000000") #FFFFFF - черная тема
+    c.grid()
 
-# запускаем окно
-root.mainloop()
+    # Захватываем фокус для отлавливания нажатий клавиш
+    c.focus_set()
+
+        
+    # Текст результата игры
+    game_over_text = c.create_text(WIDTH / 2, HEIGHT / 2, text="Ты проиграл!",
+                                font='Arial 20', fill='red',
+                                state='hidden')
+                                
+    # Текст начала новой игры после проигрыша
+    restart_text = c.create_text(WIDTH / 2, HEIGHT - HEIGHT / 3,
+                                font='Arial 25',
+                                fill='green',
+                                text="Начать новую игру",
+                                state='hidden')
+
+    # Текст выхода из программы после проигрыша
+    close_but = c.create_text(WIDTH / 2, HEIGHT - HEIGHT / 5, font='Arial 25',
+                            fill='green',
+                            text="Выход из игры",
+                            state='hidden')
+
+    # Отработка событий при нажимания кнопок
+    c.tag_bind(restart_text, "<Button-1>", clicked)
+    c.tag_bind(close_but, "<Button-1>", close_win)
+
+    # Считаем очки
+    score = Score()
+
+    # Запускаем игру
+    start_game()
+
+    # запускаем окно
+    root.mainloop()
+
+main()
+
