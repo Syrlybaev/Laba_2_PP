@@ -1,178 +1,215 @@
-import tkinter as tk
+from tkinter import *
 import random
 
-class SnakeGame:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Snake Game")
-        self.canvas = tk.Canvas(self.root, width=400, height=400)
-        self.canvas.pack()
+# Создаем глобальные переменные
+# Ширина экрана
+WIDTH = 800
 
-        self.score_label = tk.Label(self.root, text="Score: 0")
-        self.score_label.pack()
+# Высота экрана
+HEIGHT = 600 
 
-        self.stop_button = tk.Button(self.root, text="Stop Game", command=self.stop_game)
-        self.stop_button.pack()
+# Размер одного болка
+SEG_SIZE = 20
 
-        self.size = 20
-        self.snake = [(100, 100), (80, 100), (60, 100)]
-        self.direction = 'Right'
-        self.food = self.create_food()
+# Переменная, отвечающая за состояние игры
+IN_GAME = True
 
-        self.game_over = False
-        self.paused = False
+
+# Вспомогательная функция
+def create_block():
+    """ Создаем еду для змейки """
+    global BLOCK
+    posx = SEG_SIZE * random.randint(1, (WIDTH - SEG_SIZE) / SEG_SIZE)
+    posy = SEG_SIZE * random.randint(1, (HEIGHT - SEG_SIZE) / SEG_SIZE)
+    BLOCK = c.create_oval(posx, posy,
+                          posx + SEG_SIZE, posy + SEG_SIZE,
+                          fill="green")
+
+# Подсчет очков
+class Score(object):
+    # функция отображения очков на экране
+    def __init__(self):
         self.score = 0
-        self.record = 0
-        self.menu_open = None  # Используем вместо флага для хранения окна меню
+        #200 < 375 < 750
+        self.x = 55 #55  
+        self.y = 15 #15
+        c.create_text(self.x, self.y, text="Счёт: {}".format(self.score), font="Arial 20",
+                      fill="Yellow", tag="score", state='hidden')
 
-        self.root.bind("<KeyPress>", self.change_direction)
-        self.update_game()
+    # функция счета очков и вывод на экран
+    def increment(self):
+        c.delete("score")
+        self.score += 1
+        c.create_text(self.x, self.y, text="Счёт: {}".format(self.score), font="Arial 20",
+                      fill="Yellow", tag="score")
 
-    def center_window(self, window, width=300, height=200):
-        """Функция для центрирования окна на экране"""
-        screen_width = window.winfo_screenwidth()
-        screen_height = window.winfo_screenheight()
-
-        x = (screen_width - width) // 2
-        y = (screen_height - height) // 2
-
-        window.geometry(f"{width}x{height}+{x}+{y}")
-
-    def start_menu(self):
-        if not self.menu_open:  # Проверяем, что меню еще не открыто
-            self.canvas.delete("all")
-            self.menu_open = tk.Toplevel(self.root)
-            self.menu_open.title("Menu")
-            self.center_window(self.menu_open, 300, 200)  # Центрируем окно меню
-
-            self.menu_open.protocol("WM_DELETE_WINDOW", self.close_menu)
-
-            tk.Label(self.menu_open, text="Select Field Size:").pack()
-            tk.Button(self.menu_open, text="Small", command=lambda: self.start_game(200)).pack()
-            tk.Button(self.menu_open, text="Medium", command=lambda: self.start_game(400)).pack()
-            tk.Button(self.menu_open, text="Large", command=lambda: self.start_game(600)).pack()
-
-            tk.Label(self.menu_open, text=f"Record: {self.record}").pack()
-            tk.Button(self.menu_open, text="Exit", command=self.root.quit).pack()
-
-    def close_menu(self):
-        if self.menu_open:
-            self.menu_open.destroy()
-            self.menu_open = None
-
-    def start_game(self, size):
-        self.close_menu()  # Закрываем меню при старте игры
-        self.canvas.config(width=size, height=size)
-        self.root.update_idletasks()
-
-        self.size = size // 20
-        self.snake = [(size // 2, size // 2), (size // 2 - 20, size // 2), (size // 2 - 40, size // 2)]
-        self.food = self.create_food()
-        self.direction = 'Right'
-        self.game_over = False
-        self.paused = False
+    # функция сброса очков при начале новой игры
+    def reset(self):
+        c.delete("score")
         self.score = 0
-        self.update_game()
 
-    def create_food(self):
-        max_x = (self.canvas.winfo_width() // self.size) - 1
-        max_y = (self.canvas.winfo_height() // self.size) - 1
-        if max_x > 0 and max_y > 0:
-            while True:
-                x = random.randint(0, max_x) * self.size
-                y = random.randint(0, max_y) * self.size
-                if (x, y) not in self.snake:
-                    return x, y
-        return 0, 0
+# Функция для управления игровым процессом
+def main():
+    """ Моделируем игровой процесс """
+    global IN_GAME
+    if IN_GAME:
+        s.move()
+
+        # Определяем координаты головы
+        head_coords = c.coords(s.segments[-1].instance)
+        x1, y1, x2, y2 = head_coords
+
+        # столкновения с краями игрового поля
+        if x2 > WIDTH or x1 < 0 or y1 < 0 or y2 > HEIGHT:
+            IN_GAME = False
+
+        # Поедание яблока
+        elif head_coords == c.coords(BLOCK):
+            s.add_segment()
+            c.delete(BLOCK) 
+            create_block()
+
+        # Поедание змейки
+        else:
+            for index in range(len(s.segments) - 1):
+                if head_coords == c.coords(s.segments[index].instance):
+                    IN_GAME = False
+
+        # скорость змейки
+        root.after(100, main)
+    # Не IN_GAME -> останавливаем игру и выводим сообщения
+    else:
+        set_state(restart_text, 'normal')
+        set_state(game_over_text, 'normal')
+        set_state(close_but, 'normal')
+
+class Segment(object):
+    """ Сегмент змейки """
+    def __init__(self, x, y):
+        self.instance = c.create_rectangle(x, y,
+                                           x + SEG_SIZE, y + SEG_SIZE,
+                                           fill="green")
+                                           
+class Snake(object):
+    """ Класс змейки """
+    def __init__(self, segments):
+        self.segments = segments
+
+        # Варианты движения
+        self.mapping = {"Down": (0, 1), "Right": (1, 0),
+                        "Up": (0, -1), "Left": (-1, 0)}
+
+        # инициируем направление движения
+        self.vector = self.mapping["Right"]
+
+    def move(self):
+        """ Двигаем змейку в заданном направлении """
+        for index in range(len(self.segments) - 1):
+            segment = self.segments[index].instance
+            x1, y1, x2, y2 = c.coords(self.segments[index + 1].instance)
+            c.coords(segment, x1, y1, x2, y2)
+
+        x1, y1, x2, y2 = c.coords(self.segments[-2].instance)
+        c.coords(self.segments[-1].instance,
+                 x1 + self.vector[0] * SEG_SIZE, y1 + self.vector[1] * SEG_SIZE,
+                 x2 + self.vector[0] * SEG_SIZE, y2 + self.vector[1] * SEG_SIZE)
+
+    def add_segment(self):
+        """ Добавляем сегмент змейки """
+        score.increment()
+        last_seg = c.coords(self.segments[0].instance)
+        x = last_seg[2] - SEG_SIZE
+        y = last_seg[3] - SEG_SIZE
+        self.segments.insert(0, Segment(x, y))
 
     def change_direction(self, event):
-        opposite_directions = {'Left': 'Right', 'Right': 'Left', 'Up': 'Down', 'Down': 'Up'}
-        if event.keysym in ['Left', 'Right', 'Up', 'Down']:
-            if self.direction != opposite_directions.get(event.keysym):
-                self.direction = event.keysym
+        """ Изменение направления движения змейки """
+        if event.keysym in self.mapping:
+            self.vector = self.mapping[event.keysym]
 
-    def update_game(self):
-        if not self.game_over and not self.paused:
-            self.move_snake()
-            self.check_collisions()
-            self.update_canvas()
-        self.root.after(300, self.update_game)
+    # Функция обновления змейки при старте новой игры
+    def reset_snake(self):
+        for segment in self.segments:
+            c.delete(segment.instance)
 
-    def move_snake(self):
-        head_x, head_y = self.snake[0]
-        if self.direction == 'Left':
-            head_x -= self.size
-        elif self.direction == 'Right':
-            head_x += self.size
-        elif self.direction == 'Up':
-            head_y -= self.size
-        elif self.direction == 'Down':
-            head_y += self.size
+# функция для вывода сообщения
+def set_state(item, state):
+    c.itemconfigure(item, state=state)
+    c.itemconfigure(BLOCK, state='hidden')
 
-        new_head = (head_x, head_y)
-        self.snake = [new_head] + self.snake[:-1]
 
-        if self.snake[0] == self.food:
-            self.snake.append(self.snake[-1])
-            self.food = self.create_food()
-            self.score += 1
-            self.score_label.config(text=f"Score: {self.score}")
+# Функция для нажатия кнопки (новая игра)
+def clicked(event):
+    global IN_GAME
+    s.reset_snake()
+    IN_GAME = True
+    c.delete(BLOCK)
+    score.reset()
+    c.itemconfigure(restart_text, state='hidden')
+    c.itemconfigure(game_over_text, state='hidden')
+    c.itemconfigure(close_but, state='hidden')
+    start_game()
 
-    def check_collisions(self):
-        head_x, head_y = self.snake[0]
-        if head_x < 0 or head_y < 0 or head_x >= self.canvas.winfo_width() or head_y >= self.canvas.winfo_height():
-            self.game_over = True
-        if len(self.snake) != len(set(self.snake)):
-            self.game_over = True
+# Функция для старта игры
+def start_game():
+    global s
+    create_block()
+    s = create_snake()
 
-        if self.game_over:
-            self.record = max(self.record, self.score)
-            self.show_game_over_menu()
+    # Реагируем на нажатие клавиш
+    c.bind("<KeyPress>", s.change_direction)
+    main()
 
-    def update_canvas(self):
-        self.canvas.delete("all")
-        for x, y in self.snake:
-            self.canvas.create_rectangle(x, y, x + self.size, y + self.size, fill="green")
-        self.canvas.create_rectangle(self.food[0], self.food[1], self.food[0] + self.size, self.food[1] + self.size, fill="red")
 
-    def stop_game(self):
-        if not self.menu_open:
-            self.paused = True
-            self.menu_open = tk.Toplevel(self.root)
-            self.menu_open.title("Pause Menu")
-            self.center_window(self.menu_open, 300, 200)
+# Создаем сегменты и змейку
+def create_snake():
+    segments = [Segment(SEG_SIZE, SEG_SIZE),
+                Segment(SEG_SIZE * 2, SEG_SIZE),
+                Segment(SEG_SIZE * 3, SEG_SIZE)]
+    return Snake(segments)
+    
+# выход из игры
+def close_win(root):
+    exit()
 
-            self.menu_open.protocol("WM_DELETE_WINDOW", self.close_menu)
+# Настройка главного окна
+root = Tk()
+root.title("Змейка")
 
-            tk.Label(self.menu_open, text="Game Paused").pack()
-            tk.Button(self.menu_open, text="Continue", command=self.resume_game).pack()
-            tk.Button(self.menu_open, text="Main Menu", command=self.back_to_menu).pack()
-            tk.Button(self.menu_open, text="Exit", command=self.root.quit).pack()
+# Создаем экземпляр класса Canvas
+c = Canvas(root, width=WIDTH, height=HEIGHT, bg="#000000")
+c.grid()
 
-    def resume_game(self):
-        self.close_menu()
-        self.paused = False
+# Захватываем фокус для отлавливания нажатий клавиш
+c.focus_set()
 
-    def back_to_menu(self):
-        self.close_menu()
-        self.paused = False
-        self.start_menu()
+# Текст результата игры
+game_over_text = c.create_text(WIDTH / 2, HEIGHT / 2, text="Ты проиграл!",
+                               font='Arial 20', fill='red',
+                               state='hidden')
+                               
+# Текст начала новой игры после проигрыша
+restart_text = c.create_text(WIDTH / 2, HEIGHT - HEIGHT / 3,
+                             font='Arial 25',
+                             fill='green',
+                             text="Начать новую игру",
+                             state='hidden')
 
-    def show_game_over_menu(self):
-        if not self.menu_open:
-            self.menu_open = tk.Toplevel(self.root)
-            self.menu_open.title("Game Over")
-            self.center_window(self.menu_open, 300, 200)
+# Текст выхода из программы после проигрыша
+close_but = c.create_text(WIDTH / 2, HEIGHT - HEIGHT / 5, font='Arial 25',
+                          fill='green',
+                          text="Выход из игры",
+                          state='hidden')
 
-            self.menu_open.protocol("WM_DELETE_WINDOW", self.close_menu)
+# Отработка событий при нажимания кнопок
+c.tag_bind(restart_text, "<Button-1>", clicked)
+c.tag_bind(close_but, "<Button-1>", close_win)
 
-            tk.Label(self.menu_open, text="Game Over!").pack()
-            tk.Label(self.menu_open, text=f"Score: {self.score}").pack()
-            tk.Button(self.menu_open, text="Main Menu", command=self.back_to_menu).pack()
-            tk.Button(self.menu_open, text="Exit", command=self.root.quit).pack()
+# Считаем очки
+score = Score()
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    game = SnakeGame(root)
-    game.start_menu()
-    root.mainloop()
+# Запускаем игру
+start_game()
+
+# запускаем окно
+root.mainloop()
