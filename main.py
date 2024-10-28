@@ -1,18 +1,17 @@
 from tkinter import *
+from typing import List
 import random
 
-#скорость 
-#размер
 class Segment(object):
     """ Часть змейки """
-    def __init__(self, x, y):
+    def __init__(self, x, y, color = "green"):
         self.instance = c.create_rectangle(x, y,
                                            x + SEG_SIZE, y + SEG_SIZE,
-                                           fill="green")
+                                           fill= color)
                                            
 class Snake(object):
     """ Класс змейки """
-    def __init__(self, segments):
+    def __init__(self, segments: List[Segment]):
         self.segments = segments
 
         # Варианты движения
@@ -30,14 +29,14 @@ class Snake(object):
             x1, y1, x2, y2 = c.coords(self.segments[index + 1].instance)
             c.coords(segment, x1, y1, x2, y2)
 
-        x1, y1, x2, y2 = c.coords(self.segments[-2].instance)
+        x1, y1, x2, y2 = c.coords(self.segments[-1].instance)
         c.coords(self.segments[-1].instance,
                     x1 + self.vector[0] * SEG_SIZE, y1 + self.vector[1] * SEG_SIZE,
                     x2 + self.vector[0] * SEG_SIZE, y2 + self.vector[1] * SEG_SIZE)
 
     def add_segment(self):
         """ Добавляем сегмент змейки """
-        score.increment()
+        score.increment() # += 1 балл
         last_seg = c.coords(self.segments[0].instance)
         x = last_seg[2] - SEG_SIZE
         y = last_seg[3] - SEG_SIZE
@@ -86,6 +85,11 @@ def create_block():
                           posx + SEG_SIZE, posy + SEG_SIZE,
                           fill="green")
 
+# функция для вывода сообщения
+def set_state(item, state):
+    c.itemconfigure(item, state=state)
+    c.itemconfigure(BLOCK, state='hidden')
+
 # Функция для управления игровым процессом
 def game_Play():
     """ Моделируем игровой процесс """
@@ -120,12 +124,6 @@ def game_Play():
         set_state(restart_text, 'normal')
         set_state(game_over_text, 'normal')
         set_state(close_but, 'normal')
-
-# функция для вывода сообщения
-def set_state(item, state):
-    c.itemconfigure(item, state=state)
-    c.itemconfigure(BLOCK, state='hidden')
-
 
 # Функция для нажатия кнопки (новая игра)
 def clicked(event):
@@ -162,10 +160,11 @@ def close_win(root):
     exit()
 
 
-#cкорость змейки, размеры. 
+#скорость 
+#размер блока
+#цвет фона по желанию
 def main():
     global WIDTH, HEIGHT, SEG_SIZE, IN_GAME, c, root, score, restart_text, game_over_text, close_but
-
 
     # Создаем глобальные переменные
     # Ширина экрана
