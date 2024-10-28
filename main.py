@@ -1,15 +1,58 @@
 from tkinter import *
 import random
 
-# Вспомогательная функция
-def create_block():
-    """ Создаем еду для змейки """
-    global BLOCK
-    posx = SEG_SIZE * random.randint(1, (WIDTH - SEG_SIZE) / SEG_SIZE)
-    posy = SEG_SIZE * random.randint(1, (HEIGHT - SEG_SIZE) / SEG_SIZE)
-    BLOCK = c.create_oval(posx, posy,
-                          posx + SEG_SIZE, posy + SEG_SIZE,
-                          fill="green")
+#скорость 
+#размер
+class Segment(object):
+    """ Часть змейки """
+    def __init__(self, x, y):
+        self.instance = c.create_rectangle(x, y,
+                                           x + SEG_SIZE, y + SEG_SIZE,
+                                           fill="green")
+                                           
+class Snake(object):
+    """ Класс змейки """
+    def __init__(self, segments):
+        self.segments = segments
+
+        # Варианты движения
+        self.mapping = {"Down": (0, 1), "Right": (1, 0),
+                        "Up": (0, -1), "Left": (-1, 0)}
+
+        # инициируем направление движения
+        self.vector = self.mapping["Right"]
+
+        
+    def move(self):
+        """ Двигаем змейку в заданном направлении """
+        for index in range(len(self.segments) - 1):
+            segment = self.segments[index].instance
+            x1, y1, x2, y2 = c.coords(self.segments[index + 1].instance)
+            c.coords(segment, x1, y1, x2, y2)
+
+        x1, y1, x2, y2 = c.coords(self.segments[-2].instance)
+        c.coords(self.segments[-1].instance,
+                    x1 + self.vector[0] * SEG_SIZE, y1 + self.vector[1] * SEG_SIZE,
+                    x2 + self.vector[0] * SEG_SIZE, y2 + self.vector[1] * SEG_SIZE)
+
+    def add_segment(self):
+        """ Добавляем сегмент змейки """
+        score.increment()
+        last_seg = c.coords(self.segments[0].instance)
+        x = last_seg[2] - SEG_SIZE
+        y = last_seg[3] - SEG_SIZE
+        self.segments.insert(0, Segment(x, y))
+
+    def change_direction(self, event):
+        """ Изменение направления движения змейки """
+        if event.keysym in self.mapping:
+            self.vector = self.mapping[event.keysym]
+
+    # Функция обновления змейки при старте новой игры
+    def reset_snake(self):
+        for segment in self.segments:
+            c.delete(segment.instance)
+
 
 # Подсчет очков
 class Score(object):
@@ -20,7 +63,7 @@ class Score(object):
         self.x = 55 #55  
         self.y = 15 #15
         c.create_text(self.x, self.y, text="Счёт: {}".format(self.score), font="Arial 20",
-                      fill="Yellow", tag="score", state='hidden')
+                      fill="Yellow", tag="score")
 
     # функция счета очков и вывод на экран
     def increment(self):
@@ -33,6 +76,15 @@ class Score(object):
     def reset(self):
         c.delete("score")
         self.score = 0
+
+# Создание еды для змейки
+def create_block():
+    global BLOCK
+    posx = SEG_SIZE * random.randint(1, (WIDTH - SEG_SIZE) / SEG_SIZE)
+    posy = SEG_SIZE * random.randint(1, (HEIGHT - SEG_SIZE) / SEG_SIZE)
+    BLOCK = c.create_oval(posx, posy,
+                          posx + SEG_SIZE, posy + SEG_SIZE,
+                          fill="green")
 
 # Функция для управления игровым процессом
 def game_Play():
@@ -69,55 +121,6 @@ def game_Play():
         set_state(game_over_text, 'normal')
         set_state(close_but, 'normal')
 
-class Segment(object):
-    """ Сегмент змейки """
-    def __init__(self, x, y):
-        self.instance = c.create_rectangle(x, y,
-                                           x + SEG_SIZE, y + SEG_SIZE,
-                                           fill="green")
-                                           
-class Snake(object):
-    """ Класс змейки """
-    def __init__(self, segments):
-        self.segments = segments
-
-        # Варианты движения
-        self.mapping = {"Down": (0, 1), "Right": (1, 0),
-                        "Up": (0, -1), "Left": (-1, 0)}
-
-        # инициируем направление движения
-        self.vector = self.mapping["Right"]
-
-    def move(self):
-        """ Двигаем змейку в заданном направлении """
-        for index in range(len(self.segments) - 1):
-            segment = self.segments[index].instance
-            x1, y1, x2, y2 = c.coords(self.segments[index + 1].instance)
-            c.coords(segment, x1, y1, x2, y2)
-
-        x1, y1, x2, y2 = c.coords(self.segments[-2].instance)
-        c.coords(self.segments[-1].instance,
-                 x1 + self.vector[0] * SEG_SIZE, y1 + self.vector[1] * SEG_SIZE,
-                 x2 + self.vector[0] * SEG_SIZE, y2 + self.vector[1] * SEG_SIZE)
-
-    def add_segment(self):
-        """ Добавляем сегмент змейки """
-        score.increment()
-        last_seg = c.coords(self.segments[0].instance)
-        x = last_seg[2] - SEG_SIZE
-        y = last_seg[3] - SEG_SIZE
-        self.segments.insert(0, Segment(x, y))
-
-    def change_direction(self, event):
-        """ Изменение направления движения змейки """
-        if event.keysym in self.mapping:
-            self.vector = self.mapping[event.keysym]
-
-    # Функция обновления змейки при старте новой игры
-    def reset_snake(self):
-        for segment in self.segments:
-            c.delete(segment.instance)
-
 # функция для вывода сообщения
 def set_state(item, state):
     c.itemconfigure(item, state=state)
@@ -136,6 +139,14 @@ def clicked(event):
     c.itemconfigure(close_but, state='hidden')
     start_game()
 
+# Создаем сегменты и змейку
+def create_snake():
+    segments = [Segment(SEG_SIZE, SEG_SIZE),
+                Segment(SEG_SIZE * 2, SEG_SIZE),
+                Segment(SEG_SIZE * 3, SEG_SIZE)]
+    return Snake(segments)
+    
+
 # Функция для старта игры
 def start_game():
     global s
@@ -146,14 +157,6 @@ def start_game():
     c.bind("<KeyPress>", s.change_direction)
     game_Play()
 
-
-# Создаем сегменты и змейку
-def create_snake():
-    segments = [Segment(SEG_SIZE, SEG_SIZE),
-                Segment(SEG_SIZE * 2, SEG_SIZE),
-                Segment(SEG_SIZE * 3, SEG_SIZE)]
-    return Snake(segments)
-    
 # выход из игры
 def close_win(root):
     exit()
@@ -184,7 +187,7 @@ def main():
 
     # Создаем экземпляр класса Canvas
     c = Canvas(root, width=WIDTH, height=HEIGHT, bg="#000000") #FFFFFF - черная тема
-    c.grid()
+    c.grid() # сетка 
 
     # Захватываем фокус для отлавливания нажатий клавиш
     c.focus_set()
@@ -221,5 +224,6 @@ def main():
     # запускаем окно
     root.mainloop()
 
-main()
+if __name__ == "__main__":
+    main()
 
