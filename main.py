@@ -38,13 +38,13 @@ class Snake(object):
         """ Добавляем сегмент змейки """
         score.increment() # += 1 балл
         last_seg = c.coords(self.segments[0].instance)
-        x = last_seg[2] - SEG_SIZE
-        y = last_seg[3] - SEG_SIZE
+        x = last_seg[0] 
+        y = last_seg[1] 
         self.segments.insert(0, Segment(x, y))
 
     def change_direction(self, event):
         """ Изменение направления движения змейки """
-        if event.keysym in self.mapping:
+        if event.keysym in self.mapping and not (self.vector[0] + self.mapping[event.keysym][0] == 0 and self.vector[1] + self.mapping[event.keysym][1] == 0):
             self.vector = self.mapping[event.keysym]
 
     # Функция обновления змейки при старте новой игры
