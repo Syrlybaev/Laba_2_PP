@@ -59,7 +59,7 @@ class Score(object):
     def __init__(self):
         self.score = 0
         #200 < 375 < 750
-        self.x = 55 #55  
+        self.x = 375 #55  
         self.y = 15 #15
         c.create_text(self.x, self.y, text="Счёт: {}".format(self.score), font="Arial 20",
                       fill="Yellow", tag="score")
@@ -111,7 +111,7 @@ def game_Play():
             c.delete(BLOCK) 
             create_block()
 
-        # Поедание змейки
+        # cтолкновение с телом змейки
         else:
             for index in range(len(s.segments) - 1):
                 if head_coords == c.coords(s.segments[index].instance):
